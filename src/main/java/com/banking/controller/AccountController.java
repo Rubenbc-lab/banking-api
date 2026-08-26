@@ -54,4 +54,19 @@ public class AccountController {
     public ResponseEntity<List<AccountDTO>> getAllUsersAccounts() {
         return ResponseEntity.ok(accountService.getAllAccounts());
     }
+
+
+    @DeleteMapping("{iban}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMyAccount(Authentication authentication, @PathVariable("iban") String iban) {
+        String owner = authentication.getName();
+        accountService.deleteAccount(owner, iban);
+    }
+
+    @DeleteMapping("/admin/{iban}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAccountByIban(@PathVariable("iban") String iban) {
+        accountService.deleteAccountByAdmin(iban);
+    }
 }

@@ -169,7 +169,66 @@ public class BankingIntegrationTest extends AbstractTestContainers {
 
         List<AccountDTO> userAccounts = response.getBody();
         assertThat(userAccounts).hasSize(5);
+    }
 
+    @Test
+    @DisplayName("Customer can delete their own account by IBAN")
+    void customerCanDeleteOwnAccount() {
+        String ownerEmail = "customer@gmail.com";
+        String otherEmail = "other@gmail.com";
+        String token = jwtUtil.generateTestToken(ownerEmail, List.of("ROLE_USER"));
 
+        AccountDTO accountToDelete = accountService.createAccount(ownerEmail, BigDecimal.valueOf(100));
+        AccountDTO accountToKeep = accountService.createAccount(ownerEmail, BigDecimal.valueOf(250));
+        AccountDTO otherAccount = accountService.createAccount(otherEmail, BigDecimal.valueOf(500));
+
+        ResponseEntity<Void> response = restClient.delete()
+                .uri("/api/v1/accounts/{iban}", accountToDelete.iban())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+
+        List<AccountDTO> remainingAccounts = accountService.getAccountsByOwner(ownerEmail);
+        assertThat(remainingAccounts)
+                .hasSize(1)
+                .extracting(AccountDTO::iban)
+                .containsExactly(accountToKeep.iban())
+                .doesNotContain(accountToDelete.iban());
+
+        List<AccountDTO> otherUserAccounts = accountService.getAccountsByOwner(otherEmail);
+        assertThat(otherUserAccounts).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Customer can delete their own account by IBAN")
+    void adminCanDeleteAccounts() {
+        String adminEmail = "admin@gmail.com";
+        String otherEmail = "other@gmail.com";
+        String anotherEmail = "another@gmail.com";
+        String token = jwtUtil.generateTestToken(adminEmail, List.of("ROLE_ADMIN"));
+
+        AccountDTO accountToDelete = accountService.createAccount(otherEmail, BigDecimal.valueOf(100));
+        AccountDTO otherAccount = accountService.createAccount(anotherEmail, BigDecimal.valueOf(250));
+        AccountDTO accountToKeep = accountService.createAccount(otherEmail, BigDecimal.valueOf(500));
+
+        ResponseEntity<Void> response = restClient.delete()
+                .uri("/api/v1/accounts/admin/{iban}", accountToDelete.iban())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(204);
+
+        List<AccountDTO> remainingAccounts = accountService.getAccountsByOwner(otherEmail);
+        assertThat(remainingAccounts)
+                .hasSize(1)
+                .extracting(AccountDTO::iban)
+                .containsExactly(accountToKeep.iban())
+                .doesNotContain(accountToDelete.iban());
+
+        List<AccountDTO> otherUserAccounts = accountService.getAccountsByOwner(otherEmail);
+        assertThat(otherUserAccounts).hasSize(1);
     }
 }
