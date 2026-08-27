@@ -23,7 +23,7 @@ import static org.assertj.core.api.Java6Assertions.assertThat;
 @SpringBootTest(
         classes = Main.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class BankingIntegrationTest extends AbstractTestContainers {
+public class AccountIntegrationTest extends AbstractTestContainers {
     @LocalServerPort
     private int port;
 
