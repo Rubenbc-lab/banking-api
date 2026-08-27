@@ -70,6 +70,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+
     private Map<String, Object> buildErrorResponse(int status, String error, Object message) {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", Instant.now().toString());
@@ -78,4 +79,5 @@ public class GlobalExceptionHandler {
         response.put("message", message);
         return response;
     }
+
 }
